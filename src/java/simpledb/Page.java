@@ -19,6 +19,7 @@ public interface Page {
      *
      * @return the id of this page
      */
+	
     public PageId getId();
 
     /**

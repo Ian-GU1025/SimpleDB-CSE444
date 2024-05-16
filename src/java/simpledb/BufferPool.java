@@ -19,14 +19,22 @@ public class BufferPool {
     other classes. BufferPool should use the numPages argument to the
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
-
+    
+    private final int numPages;
+    
+    private int numValidPages;		// 记录目前存放页的数量
+    
+    private Page[] pages;
+    
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
     public BufferPool(int numPages) {
-        // some code goes here
+        this.numPages=numPages;
+        this.numValidPages=0;
+        this.pages=new Page[numPages];
     }
 
     /**
@@ -34,9 +42,9 @@ public class BufferPool {
      * Will acquire a lock and may block if that lock is held by another
      * transaction.
      * <p>
-     * The retrieved page should be looked up in the buffer pool.  If it
-     * is present, it should be returned.  If it is not present, it should
-     * be added to the buffer pool and returned.  If there is insufficient
+     * The retrieved page should be looked up in the buffer pool.  **If it
+     * is present, it should be returned. **If it is not present, it should
+     * be added to the buffer pool and returned.  **If there is insufficient
      * space in the buffer pool, an page should be evicted and the new page
      * should be added in its place.
      *
@@ -46,8 +54,19 @@ public class BufferPool {
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+        for(int i=0;i < numPages;i++){
+        	if(pages[i].getId().equals(pid)){
+        		return pages[i];
+        	}
+        }
+        if(numValidPages<numPages){
+        	pages[numValidPages]=Database.getCatalog().getDbFile(pid.getTableId()).readPage(pid);
+        	numValidPages++;
+        	return pages[numValidPages-1];
+        }
+        else{
+        	throw new DbException("BufferPool Overflow");
+        }
     }
 
     /**
