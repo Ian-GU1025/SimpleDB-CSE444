@@ -165,7 +165,7 @@ public class TupleDesc implements Serializable {
     	int size=0;
     	for(int i=0;i<numFields();i++)
     	{
-    		size+=getFieldType(i).getLen();
+    		size+=getFieldType(i).getLen();	// Type的getLen返回的是一个字段的字节长
     	}
  	   	return size;
     }

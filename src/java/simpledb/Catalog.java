@@ -82,6 +82,7 @@ public class Catalog {	// 存的是表 ID name TupleDesc DbFile PrimaryKey
      * @param tableid The id of the table, as specified by the DbFile.getId()
      *     function passed to addTable
      * @throws NoSuchElementException if the table doesn't exist
+     * 每个表的TupleDesc都是一样的所以每个表都有一个对应的td
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         if(idToDbFile.get(tableid)==null)throw new NoSuchElementException();

@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * A RecordId is a reference to a specific tuple on a specific page of a
- * specific table.
+ * specific table.	±êÃ÷Î¨Ò»tuple
  */
 public class RecordId implements Serializable {
 
@@ -30,16 +30,14 @@ public class RecordId implements Serializable {
      * @return the tuple number this RecordId references.
      */
     public int tupleno() {
-        // some code goes here
-        return 0;
+       return this.tupleNo;
     }
 
     /**
      * @return the page id this RecordId references.
      */
     public PageId getPageId() {
-        // some code goes here
-        return null;
+       return this.pageId;
     }
 
     /**
@@ -50,8 +48,11 @@ public class RecordId implements Serializable {
      */
     @Override
     public boolean equals(Object o) {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        if(o==null||o.getClass()!=this.getClass()){
+        	return false;
+        }
+        RecordId that=(RecordId) o;
+        return ((this.pageId.equals(that.pageId)) && (this.tupleNo==that.tupleNo));
     }
 
     /**
@@ -62,9 +63,10 @@ public class RecordId implements Serializable {
      */
     @Override
     public int hashCode() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
-
+        final int prime = 31;
+        int result =17;
+        result = prime * result + this.tupleNo;
+        result = prime * result + this.pageId.hashCode();
+        return result;
     }
-
 }

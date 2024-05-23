@@ -109,5 +109,14 @@ public class Tuple implements Serializable {
     {
     	return Arrays.asList(fields).iterator();
     }
+    
+    public boolean equals(Object o)
+    {
+    	if(o==null||o.getClass()!=this.getClass()) {
+    		return false;
+    	}
+    	Tuple that=(Tuple) o;
+    	return this.recordId.equals(that.recordId);
+    }
 }
 

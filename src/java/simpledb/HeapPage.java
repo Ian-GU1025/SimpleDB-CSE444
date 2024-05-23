@@ -18,14 +18,14 @@ public class HeapPage implements Page {
     byte header[];
     Tuple tuples[];
     int numSlots;
-
+    
     byte[] oldData;
 
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
      * The format of a HeapPage is a set of header bytes indicating
      * the slots of the page that are in use, some number of tuple slots.
-     *  Specifically, the number of tuples is equal to: <p>
+     * Specifically, the number of tuples is equal to: <p>
      *          floor((BufferPool.PAGE_SIZE*8) / (tuple size * 8 + 1))
      * <p> where tuple size is the size of tuples in this
      * database table, which can be determined via {@link Catalog#getTupleDesc}.
@@ -45,14 +45,15 @@ public class HeapPage implements Page {
 
         // allocate and read the header slots of this page
         header = new byte[getHeaderSize()];
-        for (int i=0; i<header.length; i++)
+        for (int i=0; i<header.length; i++){
             header[i] = dis.readByte();
-
+        }
         try{
             // allocate and read the actual records of this page
             tuples = new Tuple[numSlots];
-            for (int i=0; i<tuples.length; i++)
+            for (int i=0; i<tuples.length; i++){
                 tuples[i] = readNextTuple(dis,i);
+            }
         }catch(NoSuchElementException e){
             e.printStackTrace();
         }
@@ -64,21 +65,19 @@ public class HeapPage implements Page {
     /** Retrieve the number of tuples on this page.
         @return the number of tuples on this page
     */
-    private int getNumTuples() {        
-        // some code goes here
-        return 0;
-
+    private int getNumTuples() { 
+    	int result =(int)Math.floor(BufferPool.PAGE_SIZE*8/(this.td.getSize()*8+1));
+        return result;
     }
 
     /**
      * Computes the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      * @return the number of bytes in the header of a page in a HeapFile with each tuple occupying tupleSize bytes
      */
-    private int getHeaderSize() {        
-        
-        // some code goes here
-        return 0;
-                 
+    private int getHeaderSize() {           
+        int res=0;
+        res=(int)Math.ceil(numSlots/8);
+        return res;
     }
     
     /** Return a view of this page before it was modified
@@ -102,8 +101,7 @@ public class HeapPage implements Page {
      * @return the PageId associated with this page.
      */
     public HeapPageId getId() {
-    // some code goes here
-    throw new UnsupportedOperationException("implement this");
+    	return this.pid;
     }
 
     /**
@@ -128,15 +126,14 @@ public class HeapPage implements Page {
         RecordId rid = new RecordId(pid, slotId);
         t.setRecordId(rid);
         try {
-            for (int j=0; j<td.numFields(); j++) {
+            for (int j=0; j<td.numFields(); j++) {      
                 Field f = td.getFieldType(j).parse(dis);
                 t.setField(j, f);
             }
         } catch (java.text.ParseException e) {
             e.printStackTrace();
             throw new NoSuchElementException("parsing error!");
-        }
-
+        } 
         return t;
     }
 
@@ -152,9 +149,9 @@ public class HeapPage implements Page {
      * @return A byte array correspond to the bytes of this page.
      */
     public byte[] getPageData() {
-        int len = BufferPool.PAGE_SIZE;
+        int len = BufferPool.PAGE_SIZE;			// PageSize以byte为单位
         ByteArrayOutputStream baos = new ByteArrayOutputStream(len);
-        DataOutputStream dos = new DataOutputStream(baos);
+        DataOutputStream dos = new DataOutputStream(baos);	// 将数据输出到一个字节数组baos中
 
         // create the header of the page
         for (int i=0; i<header.length; i++) {
@@ -171,19 +168,18 @@ public class HeapPage implements Page {
 
             // empty slot
             if (!isSlotUsed(i)) {
-                for (int j=0; j<td.getSize(); j++) {
+                for (int j=0; j<td.getSize(); j++) {	// slot里每一位都是0表示slot为空
                     try {
                         dos.writeByte(0);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
                 }
                 continue;
             }
 
             // non-empty slot
-            for (int j=0; j<td.numFields(); j++) {
+            for (int j=0; j<td.numFields(); j++) {	// 将元组的每一个字段都以线性形式写入dos
                 Field f = tuples[i].getField(j);
                 try {
                     f.serialize(dos);
@@ -194,17 +190,17 @@ public class HeapPage implements Page {
             }
         }
 
-        // padding
+        // padding	填充空位
         int zerolen = BufferPool.PAGE_SIZE - (header.length + td.getSize() * tuples.length); //- numSlots * td.getSize();
-        byte[] zeroes = new byte[zerolen];
+        byte[] zeroes = new byte[zerolen];			// 空位
         try {
             dos.write(zeroes, 0, zerolen);
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        
         try {
-            dos.flush();
+            dos.flush();	//  确保所有数据都被写入 baos
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -234,8 +230,15 @@ public class HeapPage implements Page {
      * @param t The tuple to delete
      */
     public void deleteTuple(Tuple t) throws DbException {
-        // some code goes here
-        // not necessary for lab1
+        for(int i=0;i<numSlots;i++){
+        	if(tuples[i].equals(t)&&isSlotUsed(i)){
+        		markSlotUsed(i,false);
+        		numSlots-=1;
+        		tuples[i]=null;
+        		return ;
+        	}
+        }
+        throw new DbException("Tuple Not Found.");
     }
 
     /**
@@ -272,24 +275,40 @@ public class HeapPage implements Page {
      * Returns the number of empty slots on this page.
      */
     public int getNumEmptySlots() {
-        // some code goes here
-        return 0;
+    	int res=0;
+        for(int i=0;i<numSlots;i++)
+        {
+        	if(!isSlotUsed(i)){
+        		res+=1;
+        	}
+        }
+        return res;
     }
 
     /**
      * Returns true if associated slot on this page is filled.
      */
-    public boolean isSlotUsed(int i) {
-        // some code goes here
-        return false;
+    public boolean isSlotUsed(int i) {			// one bit header -> one slot
+    	// The low (least significant) bits of each byte
+    	// represents the status of the slots that are earlier in the file.
+    	// 最低有效位(最右端)表示最早的slot
+        int headerIndex=i / 8;
+        int bitIndex=i % 8;
+        return (header[headerIndex]>>bitIndex&1)!=0;	// x>>k&1取x的从右往左第k位(k从0开始)
     }
 
     /**
      * Abstraction to fill or clear a slot on this page.
      */
     private void markSlotUsed(int i, boolean value) {
-        // some code goes here
-        // not necessary for lab1
+    	int headerIndex=i / 8;
+        int bitIndex=i % 8;
+        if(value){	//设为1
+        	header[headerIndex]|=(1<<bitIndex);
+        }
+        else{
+        	header[headerIndex]&=((1<<bitIndex)^1);	// ^1可以写成~
+        }
     }
 
     /**
@@ -297,8 +316,11 @@ public class HeapPage implements Page {
      * (note that this iterator shouldn't return tuples in empty slots!)
      */
     public Iterator<Tuple> iterator() {
-        // some code goes here
-        return null;
+    	   List<Tuple> validTuples = new ArrayList<Tuple>();
+           for (int i = 0; i < numSlots; ++i) {
+               if (isSlotUsed(i)) validTuples.add(tuples[i]);
+           }
+           return validTuples.iterator();
     }
 
 }
