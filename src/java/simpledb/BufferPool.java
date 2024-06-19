@@ -55,9 +55,14 @@ public class BufferPool {
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         for(int i=0;i < numPages;i++){
-        	if(pages[i].getId().equals(pid)){
-        		return pages[i];
-        	}
+            if (pages[i] != null) {
+                if (pages[i].getId().equals(pid)) {  
+                    System.out.println("成功return");
+                    return pages[i];
+                }
+            } else {	// 页面没有被初始化，跳过
+            	continue;
+            }
         }
         if(numValidPages<numPages){
         	pages[numValidPages]=Database.getCatalog().getDbFile(pid.getTableId()).readPage(pid);

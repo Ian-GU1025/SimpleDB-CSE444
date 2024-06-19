@@ -50,7 +50,7 @@ public class HeapFileReadTest extends SimpleDbTestBase {
      * Unit test for HeapFile.getTupleDesc()
      */
     @Test
-    public void getTupleDesc() throws Exception {    	
+    public void getTupleDesc() throws Exception {  
         assertEquals(td, hf.getTupleDesc());        
     }
     /**
@@ -90,8 +90,7 @@ public class HeapFileReadTest extends SimpleDbTestBase {
             fail("expected exception");
         } catch (NoSuchElementException e) {
         }
-
-        it.open();
+        it.open();						// ³ö´í
         int count = 0;
         while (it.hasNext()) {
             assertNotNull(it.next());

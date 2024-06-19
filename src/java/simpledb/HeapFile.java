@@ -13,7 +13,7 @@ import java.util.*;
  * @see simpledb.HeapPage#HeapPage
  * @author Sam Madden
  */
-public class HeapFile implements DbFile {
+public class HeapFile implements DbFile {	// 一个file对应一个table
 
     /**
      * Constructs a heap file backed by the specified file.
@@ -22,8 +22,13 @@ public class HeapFile implements DbFile {
      *            the file that stores the on-disk backing store for this heap
      *            file.
      */
+	private TupleDesc td;
+	
+	private File file;
+	
     public HeapFile(File f, TupleDesc td) {
-        // some code goes here
+        this.td=td;
+        this.file=f;
     }
 
     /**
@@ -32,8 +37,7 @@ public class HeapFile implements DbFile {
      * @return the File backing this HeapFile on disk.
      */
     public File getFile() {
-        // some code goes here
-        return null;
+        return file;
     }
 
     /**
@@ -46,8 +50,7 @@ public class HeapFile implements DbFile {
      * @return an ID uniquely identifying this HeapFile.
      */
     public int getId() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return file.getAbsoluteFile().hashCode();
     }
 
     /**
@@ -56,16 +59,31 @@ public class HeapFile implements DbFile {
      * @return TupleDesc of this DbFile.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        throw new UnsupportedOperationException("implement this");
+        return this.td;
     }
 
     // see DbFile.java for javadocs
-    public Page readPage(PageId pid) {
-        // some code goes here
-        return null;
+    public Page readPage(PageId pid) throws NoSuchElementException{
+    	try
+    		{ // Push the specified page to disk
+    		if(pid.pageNumber()>=numPages()){
+    			throw new NoSuchElementException();
+    			}
+    		else{
+			    int offset = BufferPool.PAGE_SIZE * pid.pageNumber();
+			    // 使用RandomAccessFile类去随机读取文件内容
+			    RandomAccessFile raf=new RandomAccessFile(file,"r");
+			    raf.seek(offset);
+			    byte[] data=new byte[BufferPool.PAGE_SIZE];
+			    raf.read(data);
+			    raf.close();
+			    return new HeapPage((HeapPageId)pid,data);	
+	    		}
+    		}catch(Exception e){
+    			 e.printStackTrace();
+    			throw new NoSuchElementException();
+    		}
     }
-
     // see DbFile.java for javadocs
     public void writePage(Page page) throws IOException {
         // some code goes here
@@ -76,8 +94,7 @@ public class HeapFile implements DbFile {
      * Returns the number of pages in this HeapFile.
      */
     public int numPages() {
-        // some code goes here
-        return 0;
+        return (int)(file.length()/(long)BufferPool.PAGE_SIZE);
     }
 
     // see DbFile.java for javadocs
@@ -98,8 +115,7 @@ public class HeapFile implements DbFile {
 
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
-        // some code goes here
-        return null;
+        return new HeapFileIterator(this,tid);
     }
 
 }

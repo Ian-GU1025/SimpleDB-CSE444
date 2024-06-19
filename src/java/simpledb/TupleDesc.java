@@ -28,6 +28,14 @@ public class TupleDesc implements Serializable {
         public String toString() {
             return fieldName + "(" + fieldType + ")";
         }
+        
+        public boolean equals(Object o) {
+        	if(o==null||o.getClass()!=this.getClass()){
+        		return false;
+        	}
+        	TDItem other=(TDItem) o;
+        	return this.fieldName.equals(other.fieldName) && (this.fieldType.equals(other.fieldType));
+        }
     }
 
     /**
@@ -207,9 +215,7 @@ public class TupleDesc implements Serializable {
     }
 
     public int hashCode() {
-        // If you want to use TupleDesc as keys for HashMap, implement this so
-        // that equal objects have equals hashCode() results
-        throw new UnsupportedOperationException("unimplemented");
+       return Arrays.hashCode(items);
     }
 
     /**
