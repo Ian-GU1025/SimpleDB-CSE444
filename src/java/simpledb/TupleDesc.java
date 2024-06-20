@@ -68,8 +68,7 @@ public class TupleDesc implements Serializable {
         this.numfields=typeAr.length;						// 存储字段的数量
         this.items=new TDItem[typeAr.length];			// 存储不同字段的类型
         for(int i=0;i<typeAr.length;i++){
-        	items[i].fieldName=fieldAr[i];
-        	items[i].fieldType=typeAr[i];
+        	items[i] = new TDItem(typeAr[i], fieldAr[i]);
         }
     }
 
@@ -190,9 +189,10 @@ public class TupleDesc implements Serializable {
      */
     public static TupleDesc merge(TupleDesc td1, TupleDesc td2) {
     	// TupleDesc其实就是一组TDItem
+    	System.out.println("运行到这里");
     	TDItem[] tdItem=new TDItem[td1.numFields()+td2.numFields()] ;
-    	System.arraycopy(td1, 0, tdItem, 0, td1.numFields());
-    	System.arraycopy(td2, 0, tdItem, td1.numFields(), td2.numFields());
+    	System.arraycopy(td1.items, 0, tdItem, 0, td1.numFields());
+    	System.arraycopy(td2.items, 0, tdItem, td1.numFields(), td2.numFields());
     	/*System.arraycopy()方法只是简单地复制数组的内容，并不会涉及到对象的构造
     	 * 所以不需要对数组中的每一个元素(TDItem)进行构造，所以TDItem也没写构造方法*/
         return new TupleDesc(tdItem);
@@ -208,9 +208,10 @@ public class TupleDesc implements Serializable {
      * @return true if the object is equal to this TupleDesc.
      */
     public boolean equals(Object o) {
-        if (o.getClass()!=this.getClass()||o==null)return false;
+    	// 要把o==null放在前面，避免o.getClass出错
+        if (o==null||o.getClass()!=this.getClass()){return false;}
         TupleDesc that=(TupleDesc) o;
-        if(that.numFields()!=this.numFields())return false;
+        if(that.numFields()!=this.numFields()){return false;}
         return Arrays.equals(this.items, that.items);
     }
 
